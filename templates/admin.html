@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel Administrativo – Monitoria</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <nav class="bg-indigo-600 text-white p-4 shadow-md flex justify-between items-center">
+    <div class="text-xl font-bold flex gap-4 items-center">
+        Admin Monitoria
+        <a href="/calibrate" class="bg-indigo-800 text-sm px-3 py-1 rounded hover:bg-indigo-900 border border-indigo-500">Calibrar PDF Modelo</a>
+    </div>
+    <div class="flex items-center gap-4">
+        <a href="/" class="text-sm underline hover:text-indigo-200">Voltar para o site</a>
+        <a href="/logout" class="text-sm bg-red-600 px-3 py-1 rounded hover:bg-red-700">Sair</a>
+    </div>
+  </nav>
+
+  <main class="max-w-5xl mx-auto p-6 mt-6">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold text-slate-800">Gerenciamento de Turmas</h1>
+      <button onclick="openModal()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 shadow-sm">Nova Turma</button>
+    </div>
+
+    <div class="bg-white rounded shadow overflow-hidden">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-slate-100 border-b">
+            <th class="p-3">ID</th>
+            <th class="p-3">Turma</th>
+            <th class="p-3">Matéria</th>
+            <th class="p-3">Horários Vinculados</th>
+            <th class="p-3 text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for turma in turmas %}
+          <tr class="border-b hover:bg-slate-50">
+            <td class="p-3">{{ turma.id }}</td>
+            <td class="p-3 font-semibold">{{ turma.nome }}</td>
+            <td class="p-3">{{ turma.materia }}</td>
+            <td class="p-3">
+              <ul class="text-sm text-slate-600 list-disc list-inside">
+                {% for h in turma.horarios %}
+                  <li>{{ ["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"][h.dia_semana] }} - {{ h.horario }}</li>
+                {% endfor %}
+              </ul>
+            </td>
+            <td class="p-3 text-right">
+              <form action="/admin/turma/delete/{{ turma.id }}" method="POST" class="inline" onsubmit="return confirm('Excluir esta turma?');">
+                <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium">Excluir</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" class="p-6 text-center text-slate-500">Nenhuma turma cadastrada.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Modal Nova Turma -->
+  <div id="modalTurma" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h2 class="text-lg font-bold">Nova Turma</h2>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">&times;</button>
+      </div>
+      <form action="/admin/turma/save" method="POST" class="p-4 space-y-4">
+        <div>
+          <label class="block text-sm font-medium">Nome da Turma</label>
+          <input type="text" name="nome" required placeholder="Ex: 9º Ano A" class="mt-1 block w-full border rounded p-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Matéria</label>
+          <select name="materia" required class="mt-1 block w-full border rounded p-2">
+            <option value="Português">Português</option>
+            <option value="Matemática">Matemática</option>
+            <option value="Projetos">Projetos</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium border-b pb-2 mb-2">Horários na Semana</label>
+          <div id="horariosContainer" class="space-y-2">
+            <!-- Linha template -->
+            <div class="flex gap-2 items-center horario-row">
+              <select name="dia_semana[]" class="border rounded p-2 w-1/3 text-sm">
+                <option value="0">Segunda</option>
+                <option value="1">Terça</option>
+                <option value="2">Quarta</option>
+                <option value="3">Quinta</option>
+                <option value="4">Sexta</option>
+                <option value="5">Sábado</option>
+                <option value="6">Domingo</option>
+              </select>
+              <input type="text" name="horario_texto[]" placeholder="Ex: 13:00–15:00" class="border rounded p-2 flex-1 text-sm" />
+              <button type="button" onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-700 px-2">&times;</button>
+            </div>
+          </div>
+          <button type="button" onclick="addHorario()" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium">+ Adicionar Horário</button>
+        </div>
+
+        <div class="pt-4 border-t flex justify-end gap-2">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded text-slate-700 hover:bg-slate-50">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Salvar Turma</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openModal() { document.getElementById('modalTurma').classList.replace('hidden', 'flex'); }
+    function closeModal() { document.getElementById('modalTurma').classList.replace('flex', 'hidden'); }
+    
+    function addHorario() {
+      const container = document.getElementById('horariosContainer');
+      const row = document.createElement('div');
+      row.className = "flex gap-2 items-center horario-row";
+      row.innerHTML = `
+        <select name="dia_semana[]" class="border rounded p-2 w-1/3 text-sm">
+          <option value="0">Segunda</option><option value="1">Terça</option>
+          <option value="2">Quarta</option><option value="3">Quinta</option>
+          <option value="4">Sexta</option><option value="5">Sábado</option>
+          <option value="6">Domingo</option>
+        </select>
+        <input type="text" name="horario_texto[]" placeholder="Ex: 13:00–15:00" class="border rounded p-2 flex-1 text-sm" required/>
+        <button type="button" onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-700 px-2">&times;</button>
+      `;
+      container.appendChild(row);
+    }
+  </script>
+</body>
+</html>

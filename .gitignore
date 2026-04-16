@@ -1,0 +1,10 @@
+__pycache__/
+venv/
+env/
+.env
+*.db
+*.sqlite3
+*.pdf
+# O config.json tem a calibração, pode ser interessante enviar a primeira vez, 
+# mas se quiser que a VPS não resete ao debugar, descomente a linha abaixo no futuro:
+# config.json

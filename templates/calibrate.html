@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Calibração Cirúrgica do PDF</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .marker {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: #ef4444;
+        border: 2px solid white;
+        border-radius: 50%;
+        cursor: grab;
+        transform: translate(-50%, -50%);
+      }
+      .marker[data-is-text="true"] {
+        background: #3b82f6;
+      }
+      #canvasWrap {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #ddd;
+        background: white;
+        touch-action: none;
+      }
+      #overlayCanvas {
+        position: absolute;
+        top: 0; left: 0;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50">
+    <main class="max-w-5xl mx-auto p-6">
+      <h1 class="text-2xl font-bold mb-4">Calibrar PDF Linha-por-Linha</h1>
+
+      <p class="mb-3 text-slate-600">Para garantir alinhamento perfeito mesmo se no seu Word uma linha ficou com X milímetros e outra com Y, basta clicar com calma nos <b class="text-red-600">28 pontos</b> abaixo, na ordem descrita:</p>
+      <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+        <ol class="list-decimal pl-6 space-y-1 text-blue-700 bg-blue-50 p-2 rounded">
+          <li class="font-bold">Linha onde inicia o NOME</li>
+          <li class="font-bold">Linha onde inicia o CPF</li>
+          <li class="font-bold">Linha onde inicia o ENDEREÇO</li>
+          <li class="font-bold">Linha onde inicia o TELEFONE</li>
+        </ol>
+        <ol start="5" class="list-decimal pl-6 space-y-1 text-slate-700 bg-slate-100 p-2 rounded">
+          <li>Canto esquerdo da coluna "Data" (Origem da tabela da 1ª linha)</li>
+          <li>Lado direito da coluna "Data"</li>
+          <li>Lado direito da coluna "Dia da Semana"</li>
+          <li>Lado direito da coluna "Horário"</li>
+          <li>Lado direito da coluna "Atividades"</li>
+          <li>Lado direito da coluna "Rubrica"</li>
+          <li class="font-bold text-red-600 bg-red-100 p-1 rounded">Agore clique no fundo de CADA UMA das 18 LINHAS da tabela (as linhas horizontais onde o aluno escreve) começando pelo fundo da linha 1 até acabar a tabela.</li>
+        </ol>
+      </div>
+
+      <form id="uploadForm" class="mb-4 flex items-center gap-2" enctype="multipart/form-data">
+        <input type="file" name="template" accept="application/pdf" required />
+        <button class="px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700">Carregar PDF</button>
+      </form>
+      
+      <div id="counter" class="mb-2 text-indigo-700 font-bold">Cliques: 0 / 28</div>
+
+      <div id="canvasWrap" style="display:none; max-width:100%;">
+        <img id="pageImg" src="" alt="Página" style="display:block; max-width:100%;" />
+        <canvas id="overlayCanvas"></canvas>
+      </div>
+
+      <div class="mt-4 flex gap-2">
+        <button id="sendCalib" class="px-4 py-2 rounded bg-green-600 text-white disabled:opacity-50" disabled>Salvar calibração</button>
+        <a href="/" class="px-4 py-2 rounded bg-slate-200">Voltar para o sistema</a>
+      </div>
+
+      <pre id="measurements" class="mt-4 p-2 bg-slate-100 rounded text-sm font-mono text-slate-800"></pre>
+    </main>
+
+    <script>
+      const uploadForm = document.getElementById("uploadForm");
+      const pageImg = document.getElementById("pageImg");
+      const canvasWrap = document.getElementById("canvasWrap");
+      const overlayCanvas = document.getElementById("overlayCanvas");
+      const sendBtn = document.getElementById("sendCalib");
+      const measurements = document.getElementById("measurements");
+      const counter = document.getElementById("counter");
+
+      let meta = null;
+      let clicks = [];
+      let markers = [];
+
+      const sampleRows = [
+        ["01/07","Terça-feira","13:30-15:30","Perímetro e área de figuras planas; Operações com inteiros",""],
+        ["03/07","Quinta-feira","15:30-17:30","Problemas de porcentagem; Operações com inteiros",""],
+        ["08/07","Terça-feira","13:30-15:30","Equações do 1º grau",""],
+      ];
+
+      uploadForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fd = new FormData(uploadForm);
+        const res = await fetch("/calibrate", {method:"POST", body: fd});
+        const data = await res.json();
+        if (data.error) return alert(data.error);
+
+        pageImg.src = data.img_url + "?t=" + Date.now();
+        meta = data;
+        clicks = [];
+        markers.forEach(m=>m.remove());
+        markers = [];
+        updateCounter();
+        sendBtn.disabled = true;
+        canvasWrap.style.display = "block";
+      });
+
+      function updateCounter() {
+        counter.textContent = `Cliques: ${clicks.length} / 28`;
+      }
+
+      pageImg.addEventListener("click", (ev) => {
+        if (!meta || clicks.length >= 28) return;
+        const rect = pageImg.getBoundingClientRect();
+        const sx = pageImg.naturalWidth / rect.width;
+        const sy = pageImg.naturalHeight / rect.height;
+        const x_px = Math.round((ev.clientX - rect.left) * sx);
+        const y_px = Math.round((ev.clientY - rect.top) * sy);
+
+        clicks.push({x:x_px, y:y_px});
+        createMarker(clicks.length-1, ev.clientX - rect.left, ev.clientY - rect.top);
+        
+        updateCounter();
+
+        if (clicks.length >= 28) {
+          sendBtn.disabled = false;
+          drawOverlay();
+          showMeasurements();
+        }
+      });
+
+      function createMarker(idx, left, top){
+        const m = document.createElement("div");
+        m.className = "marker";
+        if (idx < 4) m.dataset.isText = "true";
+        m.style.left = left+"px";
+        m.style.top = top+"px";
+        m.dataset.idx = idx;
+        canvasWrap.appendChild(m);
+        markers.push(m);
+
+        let dragging = false;
+        m.addEventListener("mousedown", ()=> dragging=true);
+        window.addEventListener("mouseup", ()=> dragging=false);
+        window.addEventListener("mousemove",(e)=>{
+          if(!dragging) return;
+          const rect = pageImg.getBoundingClientRect();
+          const sx = pageImg.naturalWidth / rect.width;
+          const sy = pageImg.naturalHeight / rect.height;
+          const x_px = Math.round((e.clientX - rect.left) * sx);
+          const y_px = Math.round((e.clientY - rect.top) * sy);
+          clicks[idx] = {x:x_px,y:y_px};
+          m.style.left = (e.clientX - rect.left)+"px";
+          m.style.top  = (e.clientY - rect.top)+"px";
+          
+          if (clicks.length >= 28) {
+            drawOverlay();
+            showMeasurements();
+          }
+        });
+      }
+
+      function drawOverlay(){
+        if (clicks.length < 28) return;
+        
+        const ctx = overlayCanvas.getContext("2d");
+        overlayCanvas.width = pageImg.clientWidth;
+        overlayCanvas.height = pageImg.clientHeight;
+        ctx.clearRect(0,0,overlayCanvas.width,overlayCanvas.height);
+
+        const [ptN, ptC, ptE, ptT, p0, p1, p2, p3, p4, p5, ...rowBots] = clicks;
+        const sx = overlayCanvas.width / pageImg.naturalWidth;
+        const sy = overlayCanvas.height / pageImg.naturalHeight;
+
+        // Desenhar campos de texto de exemplo
+        ctx.fillStyle = "rgba(59, 130, 246, 0.8)"; // azul
+        ctx.font = "14px sans-serif";
+        ctx.fillText("JOÃO DA SILVA (Exemplo)", ptN.x*sx + 10, ptN.y*sy + 5);
+        ctx.fillText("123.456.789-00", ptC.x*sx + 10, ptC.y*sy + 5);
+        ctx.fillText("RUA DOS BOBOS, 0", ptE.x*sx + 10, ptE.y*sy + 5);
+        ctx.fillText("(11) 99999-9999", ptT.x*sx + 10, ptT.y*sy + 5);
+
+        // Desenhar a tabela
+        const x0 = p0.x*sx, y0 = p0.y*sy;
+        const xs = [p0.x,p1.x,p2.x,p3.x,p4.x,p5.x].map(v=>v*sx);
+
+        ctx.strokeStyle="rgba(0,0,255,0.7)";
+        ctx.setLineDash([4,2]);
+
+        // Traco Inicial do topo (Origem)
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(xs[xs.length-1], y0); ctx.stroke();
+
+        for(let r=0;r<18;r++){
+          let y = rowBots[r].y * sy;
+          ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(xs[xs.length-1],y); ctx.stroke();
+        }
+        
+        let yLast = rowBots[17].y * sy;
+        for(let cx of xs){
+          ctx.beginPath(); ctx.moveTo(cx,y0); ctx.lineTo(cx,yLast); ctx.stroke();
+        }
+
+        ctx.setLineDash([]);
+        ctx.fillStyle="rgba(0,0,0,0.8)";
+        ctx.font="10px sans-serif";
+
+        for (let r=0;r<sampleRows.length;r++){
+          let yrTop = (r === 0) ? y0 : rowBots[r-1].y * sy;
+          // Desenha um pouquinho abaixo do topo da linha
+          let yText = yrTop + 14 * sy; 
+          for (let c=0;c<sampleRows[r].length;c++){
+            let text = sampleRows[r][c];
+            ctx.fillText(text, xs[c]+4, yText, xs[c+1]-xs[c]-6);
+          }
+        }
+      }
+
+      function showMeasurements(){
+        const scale = meta.scale;
+        const [ptN, ptC, ptE, ptT, p0,p1,p2,p3,p4,p5, ...rowBots] = clicks;
+        measurements.textContent = `Tabela (Origem X: ${(p0.x/scale).toFixed(0)}, Y: ${(p0.y/scale).toFixed(0)}) | 18 linhas isoladas registradas.\n` + 
+          `Nome: Y=${(ptN.y/scale).toFixed(0)} | CPF: Y=${(ptC.y/scale).toFixed(0)}`;
+      }
+
+      sendBtn.addEventListener("click", async ()=>{
+        const payload = {
+          clicks: clicks.map(c=>({x:c.x,y:c.y})),
+          page_w_pts: meta.page_width_pts,
+          page_h_pts: meta.page_height_pts,
+          img_w_px: meta.img_w_px,
+          img_h_px: meta.img_h_px,
+          scale: meta.scale
+        };
+        const res = await fetch("/save-calibration", {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.ok) {
+          alert("Calibração Salva com sucesso! O sistema usará as medições precisas para cada linha individual");
+          window.location.href="/admin";
+        } else {
+          alert("Erro: "+(data.error||"unknown"));
+        }
+      });
+    </script>
+  </body>
+</html>
