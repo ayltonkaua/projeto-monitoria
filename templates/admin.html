@@ -49,6 +49,7 @@
               </ul>
             </td>
             <td class="p-3 text-right">
+              <button onclick='openModal({{ turma|tojson }})' class="text-blue-500 hover:text-blue-700 text-sm font-medium mr-3">Editar</button>
               <form action="/admin/turma/delete/{{ turma.id }}" method="POST" class="inline" onsubmit="return confirm('Excluir esta turma?');">
                 <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium">Excluir</button>
               </form>
@@ -64,21 +65,22 @@
     </div>
   </main>
 
-  <!-- Modal Nova Turma -->
+  <!-- Modal Nova/Editar Turma -->
   <div id="modalTurma" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
-      <div class="flex justify-between items-center p-4 border-b">
-        <h2 class="text-lg font-bold">Nova Turma</h2>
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="flex justify-between items-center p-4 border-b shrink-0">
+        <h2 id="modalTitle" class="text-lg font-bold">Nova Turma</h2>
         <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">&times;</button>
       </div>
-      <form action="/admin/turma/save" method="POST" class="p-4 space-y-4">
+      <form action="/admin/turma/save" method="POST" class="p-4 space-y-4 overflow-y-auto">
+        <input type="hidden" name="turma_id" id="turmaIdInput">
         <div>
           <label class="block text-sm font-medium">Nome da Turma</label>
-          <input type="text" name="nome" required placeholder="Ex: 9º Ano A" class="mt-1 block w-full border rounded p-2" />
+          <input type="text" name="nome" id="nomeInput" required placeholder="Ex: 9º Ano A" class="mt-1 block w-full border rounded p-2" />
         </div>
         <div>
           <label class="block text-sm font-medium">Matéria</label>
-          <select name="materia" required class="mt-1 block w-full border rounded p-2">
+          <select name="materia" id="materiaInput" required class="mt-1 block w-full border rounded p-2">
             <option value="Português">Português</option>
             <option value="Matemática">Matemática</option>
             <option value="Projetos">Projetos</option>
@@ -115,21 +117,50 @@
   </div>
 
   <script>
-    function openModal() { document.getElementById('modalTurma').classList.replace('hidden', 'flex'); }
+    function openModal(turma = null) { 
+      const modal = document.getElementById('modalTurma');
+      const title = document.getElementById('modalTitle');
+      const container = document.getElementById('horariosContainer');
+      
+      if (turma) {
+        title.textContent = "Editar Turma";
+        document.getElementById('turmaIdInput').value = turma.id;
+        document.getElementById('nomeInput').value = turma.nome;
+        document.getElementById('materiaInput').value = turma.materia;
+        
+        container.innerHTML = "";
+        turma.horarios.forEach(h => {
+          addHorario(h.dia_semana, h.horario);
+        });
+      } else {
+        title.textContent = "Nova Turma";
+        document.getElementById('turmaIdInput').value = "";
+        document.getElementById('nomeInput').value = "";
+        document.getElementById('materiaInput').value = "Português";
+        container.innerHTML = "";
+        addHorario(); // 1 linha vazia por padrao
+      }
+      
+      modal.classList.replace('hidden', 'flex'); 
+    }
+    
     function closeModal() { document.getElementById('modalTurma').classList.replace('flex', 'hidden'); }
     
-    function addHorario() {
+    function addHorario(dia = 0, horario = "") {
       const container = document.getElementById('horariosContainer');
       const row = document.createElement('div');
       row.className = "flex gap-2 items-center horario-row";
       row.innerHTML = `
         <select name="dia_semana[]" class="border rounded p-2 w-1/3 text-sm">
-          <option value="0">Segunda</option><option value="1">Terça</option>
-          <option value="2">Quarta</option><option value="3">Quinta</option>
-          <option value="4">Sexta</option><option value="5">Sábado</option>
-          <option value="6">Domingo</option>
+          <option value="0" ${dia == 0 ? 'selected' : ''}>Segunda</option>
+          <option value="1" ${dia == 1 ? 'selected' : ''}>Terça</option>
+          <option value="2" ${dia == 2 ? 'selected' : ''}>Quarta</option>
+          <option value="3" ${dia == 3 ? 'selected' : ''}>Quinta</option>
+          <option value="4" ${dia == 4 ? 'selected' : ''}>Sexta</option>
+          <option value="5" ${dia == 5 ? 'selected' : ''}>Sábado</option>
+          <option value="6" ${dia == 6 ? 'selected' : ''}>Domingo</option>
         </select>
-        <input type="text" name="horario_texto[]" placeholder="Ex: 13:00–15:00" class="border rounded p-2 flex-1 text-sm" required/>
+        <input type="text" name="horario_texto[]" value="${horario}" placeholder="Ex: 13:00–15:00" class="border rounded p-2 flex-1 text-sm" required/>
         <button type="button" onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-700 px-2">&times;</button>
       `;
       container.appendChild(row);

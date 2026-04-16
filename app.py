@@ -190,6 +190,7 @@ def admin():
 @app.route("/admin/turma/save", methods=["POST"])
 @login_required
 def admin_save_turma():
+    turma_id_form = request.form.get("turma_id")
     nome = request.form.get("nome")
     materia = request.form.get("materia")
     dias = request.form.getlist("dia_semana[]")
@@ -200,8 +201,14 @@ def admin_save_turma():
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("INSERT INTO turmas (nome, materia) VALUES (?, ?)", (nome, materia))
-    turma_id = c.lastrowid
+    
+    if turma_id_form:
+        turma_id = int(turma_id_form)
+        c.execute("UPDATE turmas SET nome=?, materia=? WHERE id=?", (nome, materia, turma_id))
+        c.execute("DELETE FROM turmas_horarios WHERE turma_id=?", (turma_id,))
+    else:
+        c.execute("INSERT INTO turmas (nome, materia) VALUES (?, ?)", (nome, materia))
+        turma_id = c.lastrowid
     
     for dia, hor in zip(dias, horarios):
         if dia.strip() != "" and hor.strip() != "":
