@@ -74,6 +74,7 @@
         <div class="bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg text-sm">
           <strong>Regras da Monitoria:</strong>
           <ul class="list-disc list-inside mt-1">
+            <li>Você só pode atuar até <strong>2 horas</strong> por dia.</li>
             <li>Você só pode atuar até <strong>4 horas</strong> por semana.</li>
             <li>Você só pode atuar até <strong>16 horas</strong> no mês.</li>
             <li>Selecione abaixo os dias em que houve aplicação da atividade da sua turma.</li>
@@ -286,17 +287,14 @@
       // Dias permitidos na turma
       const allowedDays = {};
       turmaInfo.horarios.forEach(h => {
-        allowedDays[h.dia_semana] = h.horario;
+        if (!allowedDays[h.dia_semana]) allowedDays[h.dia_semana] = [];
+        allowedDays[h.dia_semana].push(h.horario);
       });
 
       // Gerar todos os dias do mês
       const diasNoMes = new Date(year, month, 0).getDate();
       const diasSemanaNome = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
       
-      // Ajuste semana padrão: JS Date getDay() é 0=Dom, 1=Seg...
-      // Como no Python: 0=Seg, 1=Ter, ... 6=Dom
-      // Vamos mapear de Python para JS:
-      const pythonToJSDay = {0:1, 1:2, 2:3, 3:4, 4:5, 5:6, 6:0};
       const jsToPythonDay = {1:0, 2:1, 3:2, 4:3, 5:4, 6:5, 0:6};
 
       let validCardCount = 0;
@@ -306,56 +304,71 @@
         let jsDay = d.getDay();
         let pyDay = jsToPythonDay[jsDay];
 
-        if (allowedDays[pyDay] !== undefined) {
-          // É um dia possivel
+        if (allowedDays[pyDay] && allowedDays[pyDay].length > 0) {
+          // É um dia possivel. Podemos ter multiplos horarios no mesmo dia!
           let dateStr = `${String(i).padStart(2,'0')}/${String(month).padStart(2,'0')}`;
           let dayName = diasSemanaNome[jsDay];
-          let horario = allowedDays[pyDay];
           let weekNum = getWeekNumberOfMonth(d);
+          
+          // Ordenar cronologicamente se tiver mais de um horário no dia
+          let horariosDoDia = [...allowedDays[pyDay]].sort();
 
-          const card = document.createElement('div');
-          card.className = "border rounded-lg p-3 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition bg-white select-none relative";
-          card.innerHTML = `
-            <div class="text-sm text-slate-500">${dayName}</div>
-            <div class="text-2xl font-bold text-slate-800">${dateStr}</div>
-            <div class="text-xs text-indigo-600 font-semibold mt-1 bg-indigo-50 inline-block px-1 rounded">${horario}</div>
-            <div class="check-icon hidden absolute top-2 right-2 text-indigo-600 bg-white rounded-full"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg></div>
-          `;
+          horariosDoDia.forEach((horario, idx) => {
+            let uniqueId = `${dateStr}_${idx}`;
+            let aulaLabel = horariosDoDia.length > 1 ? `${idx + 1}ª Aula` : `Aula Única`;
 
-          // Logica de Clique e Regras
-          card.addEventListener('click', () => {
-            const index = selectedDays.findIndex(x => x.dateStr === dateStr);
-            if (index > -1) {
-              // Remoção
-              selectedDays.splice(index, 1);
-              card.classList.remove('border-indigo-600', 'bg-indigo-50','shadow-inner');
-              card.querySelector('.check-icon').classList.add('hidden');
-            } else {
-              // Adição com validação
-              const hoursToAdd = getHoursFromTimeString(horario);
-              let totalHoursMonth = selectedDays.reduce((acc, x) => acc + getHoursFromTimeString(x.horario), 0);
-              let totalHoursWeek = selectedDays.filter(x => x.weekNum === weekNum).reduce((acc, x) => acc + getHoursFromTimeString(x.horario), 0);
+            const card = document.createElement('div');
+            card.className = "border rounded-lg p-3 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition bg-white select-none relative";
+            card.innerHTML = `
+              <div class="flex justify-between items-start">
+                  <div class="text-sm text-slate-500">${dayName}</div>
+                  <div class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">${aulaLabel}</div>
+              </div>
+              <div class="text-2xl font-bold text-slate-800">${dateStr}</div>
+              <div class="text-xs text-indigo-600 font-semibold mt-1 bg-indigo-50 inline-block px-1 rounded">${horario}</div>
+              <div class="check-icon hidden absolute top-2 right-2 text-indigo-600 bg-white rounded-full"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg></div>
+            `;
 
-              if (totalHoursMonth + hoursToAdd > 16.01) {
-                alert(`Limite mensal excedido: A seleção deste horário ultrapassará as 16h mensais de limite.`);
-                return;
+            // Logica de Clique e Regras
+            card.addEventListener('click', () => {
+              const indexFound = selectedDays.findIndex(x => x.uniqueId === uniqueId);
+              if (indexFound > -1) {
+                // Remoção
+                selectedDays.splice(indexFound, 1);
+                card.classList.remove('border-indigo-600', 'bg-indigo-50','shadow-inner');
+                card.querySelector('.check-icon').classList.add('hidden');
+              } else {
+                // Adição com validação
+                const hoursToAdd = getHoursFromTimeString(horario);
+                let totalHoursMonth = selectedDays.reduce((acc, x) => acc + getHoursFromTimeString(x.horario), 0);
+                let totalHoursWeek = selectedDays.filter(x => x.weekNum === weekNum).reduce((acc, x) => acc + getHoursFromTimeString(x.horario), 0);
+                let totalHoursDay = selectedDays.filter(x => x.dateStr === dateStr).reduce((acc, x) => acc + getHoursFromTimeString(x.horario), 0);
+
+                if (totalHoursMonth + hoursToAdd > 16.01) {
+                  alert(`Limite mensal excedido: A seleção deste horário ultrapassará as 16h mensais.`);
+                  return;
+                }
+                if (totalHoursWeek + hoursToAdd > 4.01) {
+                  alert(`Limite semanal excedido: A seleção deste horário ultrapassará as 4h semanais.`);
+                  return;
+                }
+                if (totalHoursDay + hoursToAdd > 2.01) {
+                  alert(`Limite diário excedido: Você só pode atuar até 2h no mesmo dia.`);
+                  return;
+                }
+
+                selectedDays.push({
+                  uniqueId, dateObj: d, dateStr, dayOfWeekName: dayName, horario, weekNum, aulaLabel
+                });
+                card.classList.add('border-indigo-600', 'bg-indigo-50', 'shadow-inner');
+                card.querySelector('.check-icon').classList.remove('hidden');
               }
-              if (totalHoursWeek + hoursToAdd > 4.01) {
-                alert(`Limite semanal excedido: A seleção deste horário ultrapassará as 4h semanais de limite.`);
-                return;
-              }
+              updateHoursSummary();
+            });
 
-              selectedDays.push({
-                dateObj: d, dateStr, dayOfWeekName: dayName, horario, weekNum
-              });
-              card.classList.add('border-indigo-600', 'bg-indigo-50', 'shadow-inner');
-              card.querySelector('.check-icon').classList.remove('hidden');
-            }
-            updateHoursSummary();
+            container.appendChild(card);
+            validCardCount++;
           });
-
-          container.appendChild(card);
-          validCardCount++;
         }
       }
 
@@ -424,7 +437,8 @@
           <div class="min-w-[150px]">
             <span class="block font-bold text-slate-700">${d.dateStr}</span>
             <span class="text-sm text-slate-500">${d.dayOfWeekName}</span><br/>
-            <span class="text-xs bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.5 rounded">${d.horario}</span>
+            <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">${d.aulaLabel}</span><br/>
+            <span class="text-xs bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.5 rounded mt-1 inline-block">${d.horario}</span>
           </div>
           <div class="flex-1 w-full">
             <input type="text" id="ativ_${i}" required placeholder="Ex: Leitura e Interpretação Textual..." class="w-full border rounded p-2 focus:border-indigo-500 outline-none transition"/>
