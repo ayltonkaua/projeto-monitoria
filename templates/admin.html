@@ -30,6 +30,7 @@
           <tr class="bg-slate-100 border-b">
             <th class="p-3">ID</th>
             <th class="p-3">Turma</th>
+            <th class="p-3">Série/Ano</th>
             <th class="p-3">Matéria</th>
             <th class="p-3">Horários Vinculados</th>
             <th class="p-3 text-right">Ações</th>
@@ -40,6 +41,7 @@
           <tr class="border-b hover:bg-slate-50">
             <td class="p-3">{{ turma.id }}</td>
             <td class="p-3 font-semibold">{{ turma.nome }}</td>
+            <td class="p-3">{{ turma.ano_serie }}</td>
             <td class="p-3">{{ turma.materia }}</td>
             <td class="p-3">
               <ul class="text-sm text-slate-600 list-disc list-inside">
@@ -77,6 +79,20 @@
         <div>
           <label class="block text-sm font-medium">Nome da Turma</label>
           <input type="text" name="nome" id="nomeInput" required placeholder="Ex: 9º Ano A" class="mt-1 block w-full border rounded p-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Série/Ano Escolar</label>
+          <select name="ano_serie" id="anoSerieInput" required class="mt-1 block w-full border rounded p-2">
+            <option value="">Selecione...</option>
+            <option value="6º Ano">6º Ano</option>
+            <option value="7º Ano">7º Ano</option>
+            <option value="8º Ano">8º Ano</option>
+            <option value="9º Ano">9º Ano</option>
+            <option value="1º Ano EM">1º Ano Ensino Médio</option>
+            <option value="2º Ano EM">2º Ano Ensino Médio</option>
+            <option value="3º Ano EM">3º Ano Ensino Médio</option>
+            <option value="Outro">Outro</option>
+          </select>
         </div>
         <div>
           <label class="block text-sm font-medium">Matéria</label>
@@ -126,6 +142,7 @@
         title.textContent = "Editar Turma";
         document.getElementById('turmaIdInput').value = turma.id;
         document.getElementById('nomeInput').value = turma.nome;
+        document.getElementById('anoSerieInput').value = turma.ano_serie || "";
         document.getElementById('materiaInput').value = turma.materia;
         
         container.innerHTML = "";
@@ -136,6 +153,7 @@
         title.textContent = "Nova Turma";
         document.getElementById('turmaIdInput').value = "";
         document.getElementById('nomeInput').value = "";
+        document.getElementById('anoSerieInput').value = "";
         document.getElementById('materiaInput').value = "Português";
         container.innerHTML = "";
         addHorario(); // 1 linha vazia por padrao

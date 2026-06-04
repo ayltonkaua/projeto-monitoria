@@ -105,6 +105,14 @@
         </h2>
         <p class="text-slate-600 text-sm">Descreva o tipo de atividade ou conteúdo abordado (ex: "Leitura de texto"). Seja breve para caber na tabela.</p>
 
+        <div id="btnAutoFillContainer" class="hidden mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded flex justify-between items-center gap-4">
+           <div>
+              <p class="font-bold text-indigo-800 text-sm">Gerador Automático de Atividades</p>
+              <p class="text-xs text-indigo-600">Baseado no currículo oficial da série selecionada.</p>
+           </div>
+           <button type="button" id="btnAutoFill" class="px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded shadow hover:bg-indigo-700 whitespace-nowrap">✨ Preencher Automaticamente</button>
+        </div>
+
         <div id="atividadesContainer" class="space-y-4">
           <!-- Gerado via JS -->
         </div>
@@ -143,6 +151,7 @@
 
   <script>
     let turmasDB = [];
+    let curriculoDB = {};
     let selectedDays = []; // Array de dados do dia ex: { dateObj, dateStr, dayOfWeekName, horario }
 
     const step1 = document.getElementById('step1');
@@ -251,7 +260,19 @@
       form.submit();
     });
 
-    // Iniciar carregando turmas
+    document.getElementById('btnAutoFill').addEventListener('click', () => {
+        const turmaId = parseInt(document.getElementById('turma_id').value);
+        const turmaInfo = turmasDB.find(t => t.id === turmaId);
+        const atividadesDisp = curriculoDB[turmaInfo.ano_serie][turmaInfo.materia];
+        
+        selectedDays.forEach((d, i) => {
+             const input = document.getElementById(`ativ_${i}`);
+             const randomIndex = Math.floor(Math.random() * atividadesDisp.length);
+             input.value = atividadesDisp[randomIndex];
+        });
+    });
+
+    // Iniciar carregando turmas e curriculo
     document.addEventListener("DOMContentLoaded", async () => {
       try {
         const res = await fetch("/api/turmas");
@@ -262,9 +283,12 @@
         turmasDB.forEach(t => {
           tSelect.innerHTML += `<option value="${t.id}">${t.nome} - ${t.materia}</option>`;
         });
-      } catch (err) {
-        console.error(err);
-      }
+      } catch (err) { console.error(err); }
+
+      try {
+        const resC = await fetch("/api/curriculo");
+        curriculoDB = await resC.json();
+      } catch (err) { console.error(err); }
     });
 
     // Construção do Calendário
@@ -446,6 +470,15 @@
         `;
         container.appendChild(item);
       });
+
+      // Lógica de exibir ou ocultar o Botão Mágico
+      const turmaId = parseInt(document.getElementById('turma_id').value);
+      const turmaInfo = turmasDB.find(t => t.id === turmaId);
+      if(turmaInfo && turmaInfo.ano_serie && curriculoDB[turmaInfo.ano_serie] && curriculoDB[turmaInfo.ano_serie][turmaInfo.materia]) {
+          document.getElementById('btnAutoFillContainer').classList.remove('hidden');
+      } else {
+          document.getElementById('btnAutoFillContainer').classList.add('hidden');
+      }
     }
 
   </script>

@@ -28,6 +28,10 @@ def init_db():
         nome TEXT,
         materia TEXT
     )''')
+    try:
+        c.execute("ALTER TABLE turmas ADD COLUMN ano_serie TEXT")
+    except sqlite3.OperationalError:
+        pass
     c.execute('''CREATE TABLE IF NOT EXISTS turmas_horarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         turma_id INTEGER,
@@ -182,6 +186,7 @@ def admin():
             "id": t['id'],
             "nome": t['nome'],
             "materia": t['materia'],
+            "ano_serie": t['ano_serie'] if 'ano_serie' in t.keys() else "",
             "horarios": [{"dia_semana": h["dia_semana"], "horario": h["horario"]} for h in horarios]
         })
     conn.close()
@@ -193,6 +198,7 @@ def admin_save_turma():
     turma_id_form = request.form.get("turma_id")
     nome = request.form.get("nome")
     materia = request.form.get("materia")
+    ano_serie = request.form.get("ano_serie", "")
     dias = request.form.getlist("dia_semana[]")
     horarios = request.form.getlist("horario_texto[]")
 
@@ -204,10 +210,10 @@ def admin_save_turma():
     
     if turma_id_form:
         turma_id = int(turma_id_form)
-        c.execute("UPDATE turmas SET nome=?, materia=? WHERE id=?", (nome, materia, turma_id))
+        c.execute("UPDATE turmas SET nome=?, materia=?, ano_serie=? WHERE id=?", (nome, materia, ano_serie, turma_id))
         c.execute("DELETE FROM turmas_horarios WHERE turma_id=?", (turma_id,))
     else:
-        c.execute("INSERT INTO turmas (nome, materia) VALUES (?, ?)", (nome, materia))
+        c.execute("INSERT INTO turmas (nome, materia, ano_serie) VALUES (?, ?, ?)", (nome, materia, ano_serie))
         turma_id = c.lastrowid
     
     for dia, hor in zip(dias, horarios):
@@ -247,10 +253,19 @@ def api_turmas():
             "id": t["id"],
             "nome": t["nome"],
             "materia": t["materia"],
+            "ano_serie": t["ano_serie"] if 'ano_serie' in t.keys() else "",
             "horarios": horarios
         })
     conn.close()
     return jsonify(dados)
+
+@app.route("/api/curriculo", methods=["GET"])
+def api_curriculo():
+    try:
+        with open(os.path.join(APP_DIR, "curriculo.json"), "r", encoding="utf-8") as f:
+            return jsonify(json.load(f))
+    except Exception:
+        return jsonify({})
 
 # === ROTAS MONITOR (GERADOR) ===
 

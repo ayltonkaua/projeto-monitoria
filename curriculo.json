@@ -1,0 +1,65 @@
+{
+  "8º Ano": {
+    "Matemática": [
+      "Atividade de números inteiros",
+      "Atividade de frações e operações",
+      "Atividade de potenciação e raízes",
+      "Atividade de expressões algébricas",
+      "Atividade de equações do 1º grau",
+      "Atividade de sistema de equações",
+      "Atividade de razão e proporção",
+      "Atividade de porcentagem",
+      "Atividade de grandezas e medidas",
+      "Atividade de perímetro e área de figuras planas",
+      "Atividade de volume de sólidos",
+      "Atividade de leitura de tabelas e gráficos",
+      "Atividade de problemas contextualizados (situações do cotidiano)"
+    ],
+    "Português": [
+      "Atividade de leitura e interpretação de textos narrativos",
+      "Atividade de leitura e interpretação de textos jornalísticos",
+      "Atividade de leitura de textos de opinião",
+      "Atividade de leitura de poemas",
+      "Atividade de leitura de tirinhas e charges",
+      "Atividade de produção de texto narrativo",
+      "Atividade de produção de texto de opinião",
+      "Atividade de reescrita e revisão de texto",
+      "Atividade de gramática: classes de palavras",
+      "Atividade de gramática: concordância verbal e nominal",
+      "Atividade de gramática: regência e crase",
+      "Atividade de ortografia e acentuação",
+      "Atividade de análise de efeitos de sentido (figuras de linguagem, ironia, etc.)"
+    ]
+  },
+  "9º Ano": {
+    "Matemática": [
+      "Atividade de razão e proporção",
+      "Atividade de porcentagem e juros simples",
+      "Atividade de funções do 1º grau",
+      "Atividade de funções do 2º grau",
+      "Atividade de sistema de equações lineares",
+      "Atividade de inequações",
+      "Atividade de estatística (média, mediana, moda)",
+      "Atividade de probabilidade simples",
+      "Atividade de Teorema de Pitágoras",
+      "Atividade de semelhança de triângulos",
+      "Atividade de ângulos e polígonos",
+      "Atividade de leitura e interpretação de gráficos",
+      "Atividade de revisão geral para avaliação"
+    ],
+    "Português": [
+      "Atividade de leitura de crônicas",
+      "Atividade de leitura de textos argumentativos",
+      "Atividade de leitura de reportagens e notícias",
+      "Atividade de leitura de textos publicitários",
+      "Atividade de leitura de textos multimodais (imagem + texto)",
+      "Atividade de produção de texto argumentativo",
+      "Atividade de produção de crônica ou relato",
+      "Atividade de produção de resenha/opinião",
+      "Atividade de coesão e coerência textual",
+      "Atividade de variação linguística (formal/informal, regionalismos)",
+      "Atividade de gramática: períodos compostos e pontuação",
+      "Atividade de revisão para avaliação (leitura + gramática)"
+    ]
+  }
+}
