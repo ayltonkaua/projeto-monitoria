@@ -24,6 +24,7 @@
     <div class="flex border-b mb-6">
       <button onclick="switchTab('turmas')" id="btnTabTurmas" class="px-4 py-2 border-b-2 font-bold text-indigo-600 border-indigo-600">Gestão de Turmas</button>
       <button onclick="switchTab('monitores')" id="btnTabMonitores" class="px-4 py-2 border-b-2 font-bold text-slate-500 border-transparent hover:text-indigo-600">Monitores Cadastrados</button>
+      <button onclick="switchTab('layout')" id="btnTabLayout" class="px-4 py-2 border-b-2 font-bold text-slate-500 border-transparent hover:text-indigo-600">Layout do PDF</button>
     </div>
 
     <!-- ABA TURMAS -->
@@ -116,6 +117,55 @@
       </div>
     </div> <!-- /tabMonitores -->
 
+    <!-- ABA LAYOUT DO PDF -->
+    <div id="tabLayout" class="hidden">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-slate-800">Layout e Design do PDF</h1>
+      </div>
+
+      <div class="bg-white rounded shadow p-6 max-w-2xl">
+        <form action="/admin/layout/save" method="POST" class="space-y-6">
+          
+          <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-4">
+            <p class="text-sm text-indigo-700">
+              Escolha como o sistema deve se comportar quando o texto for muito grande para caber no formulário PDF.
+            </p>
+          </div>
+
+          <!-- Nome -->
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">Comportamento para: Nome do Monitor</label>
+            <select name="nome" class="block w-full border border-slate-300 rounded p-2 bg-white">
+              <option value="shrink" {% if layout.nome == 'shrink' %}selected{% endif %}>Diminuir o tamanho da letra até caber (Shrink to fit)</option>
+              <option value="wrap" {% if layout.nome == 'wrap' %}selected{% endif %}>Pular para a linha de baixo (Wrap text)</option>
+            </select>
+          </div>
+
+          <!-- Endereço -->
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">Comportamento para: Endereço</label>
+            <select name="endereco" class="block w-full border border-slate-300 rounded p-2 bg-white">
+              <option value="shrink" {% if layout.endereco == 'shrink' %}selected{% endif %}>Diminuir o tamanho da letra até caber (Shrink to fit)</option>
+              <option value="wrap" {% if layout.endereco == 'wrap' %}selected{% endif %}>Pular para a linha de baixo (Wrap text)</option>
+            </select>
+          </div>
+
+          <!-- Atividades -->
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">Comportamento para: Coluna de Atividades</label>
+            <select name="atividades" class="block w-full border border-slate-300 rounded p-2 bg-white">
+              <option value="shrink" {% if layout.atividades == 'shrink' %}selected{% endif %}>Diminuir o tamanho da letra até caber (Shrink to fit)</option>
+              <option value="wrap" {% if layout.atividades == 'wrap' %}selected{% endif %}>Pular para a linha de baixo (Wrap text) - RECOMENDADO</option>
+            </select>
+          </div>
+
+          <div class="pt-4 border-t flex justify-end">
+            <button type="submit" class="px-6 py-2 bg-indigo-600 text-white font-bold rounded shadow hover:bg-indigo-700">Salvar Layout</button>
+          </div>
+        </form>
+      </div>
+    </div> <!-- /tabLayout -->
+
   </main>
 
   <!-- Modal Nova/Editar Turma -->
@@ -185,23 +235,31 @@
 
   <script>
     function switchTab(tab) {
+      document.getElementById('tabTurmas').classList.add('hidden');
+      document.getElementById('tabMonitores').classList.add('hidden');
+      document.getElementById('tabLayout').classList.add('hidden');
+      
+      document.getElementById('btnTabTurmas').className = "px-4 py-2 border-b-2 font-bold text-slate-500 border-transparent hover:text-indigo-600";
+      document.getElementById('btnTabMonitores').className = "px-4 py-2 border-b-2 font-bold text-slate-500 border-transparent hover:text-indigo-600";
+      document.getElementById('btnTabLayout').className = "px-4 py-2 border-b-2 font-bold text-slate-500 border-transparent hover:text-indigo-600";
+
       if(tab === 'turmas') {
         document.getElementById('tabTurmas').classList.remove('hidden');
-        document.getElementById('tabMonitores').classList.add('hidden');
         document.getElementById('btnTabTurmas').className = "px-4 py-2 border-b-2 font-bold text-indigo-600 border-indigo-600";
-        document.getElementById('btnTabMonitores').className = "px-4 py-2 border-b-2 font-bold text-slate-500 border-transparent hover:text-indigo-600";
-        window.location.hash = 'turmas';
-      } else {
-        document.getElementById('tabTurmas').classList.add('hidden');
+      } else if(tab === 'monitores') {
         document.getElementById('tabMonitores').classList.remove('hidden');
         document.getElementById('btnTabMonitores').className = "px-4 py-2 border-b-2 font-bold text-indigo-600 border-indigo-600";
-        document.getElementById('btnTabTurmas').className = "px-4 py-2 border-b-2 font-bold text-slate-500 border-transparent hover:text-indigo-600";
-        window.location.hash = 'monitores';
+      } else if(tab === 'layout') {
+        document.getElementById('tabLayout').classList.remove('hidden');
+        document.getElementById('btnTabLayout').className = "px-4 py-2 border-b-2 font-bold text-indigo-600 border-indigo-600";
       }
+      window.location.hash = tab;
     }
     // Ao carregar a pagina, verifica o hash
     document.addEventListener('DOMContentLoaded', () => {
       if(window.location.hash === '#monitores') switchTab('monitores');
+      else if(window.location.hash === '#layout') switchTab('layout');
+      else switchTab('turmas');
     });
 
     function openModal(turma = null) { 

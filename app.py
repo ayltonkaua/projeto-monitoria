@@ -69,6 +69,21 @@ def save_config(cfg):
 def top_to_reportlab_y(top_px, page_height):
     return page_height - top_px
 
+def draw_wrapped_text_field(c, text, x, y, max_w, font, fs, line_height):
+    words = str(text).split()
+    line = ""
+    dy = 0.0
+    for w in words:
+        test = (line + " " + w).strip()
+        if c.stringWidth(test, font, fs) <= max_w:
+            line = test
+        else:
+            c.drawString(x, y - dy, line)
+            line = w
+            dy += line_height
+    if line:
+        c.drawString(x, y - dy, line)
+
 def draw_shrink_to_fit_text(c, text, x, y, max_w, font, default_fs):
     text_str = str(text)
     fs = default_fs
@@ -89,6 +104,8 @@ def desenhar_overlay(linhas, dados_pessoais, cfg):
     c = canvas.Canvas(buf, pagesize=(page_w, page_h))
     
     # 1. Desenhar Dados Pessoais (se configurados na calibração)
+    layout = cfg.get("layout", {"nome": "shrink", "endereco": "shrink", "atividades": "wrap"})
+    
     if "pessoais" in cfg:
         fs_pessoal = cfg["pessoais"].get("font_size", 9)
         c.setFont(BASE_FONT, fs_pessoal)
@@ -98,7 +115,10 @@ def desenhar_overlay(linhas, dados_pessoais, cfg):
             px = cfg["pessoais"]["nome"][0]
             py = top_to_reportlab_y(cfg["pessoais"]["nome"][1], page_h)
             max_w = page_w - px - 30 # margem de 30pts da borda direita
-            draw_shrink_to_fit_text(c, dados_pessoais["nome"], px, py, max_w, BASE_FONT, fs_pessoal)
+            if layout.get("nome", "shrink") == "shrink":
+                draw_shrink_to_fit_text(c, dados_pessoais["nome"], px, py, max_w, BASE_FONT, fs_pessoal)
+            else:
+                draw_wrapped_text_field(c, dados_pessoais["nome"], px, py, max_w, BASE_FONT, fs_pessoal, line_h)
         
         if "cpf" in cfg["pessoais"] and dados_pessoais.get("cpf"):
             px = cfg["pessoais"]["cpf"][0]
@@ -109,7 +129,10 @@ def desenhar_overlay(linhas, dados_pessoais, cfg):
             px = cfg["pessoais"]["endereco"][0]
             py = top_to_reportlab_y(cfg["pessoais"]["endereco"][1], page_h)
             max_w = page_w - px - 30
-            draw_shrink_to_fit_text(c, dados_pessoais["endereco"], px, py, max_w, BASE_FONT, fs_pessoal)
+            if layout.get("endereco", "shrink") == "shrink":
+                draw_shrink_to_fit_text(c, dados_pessoais["endereco"], px, py, max_w, BASE_FONT, fs_pessoal)
+            else:
+                draw_wrapped_text_field(c, dados_pessoais["endereco"], px, py, max_w, BASE_FONT, fs_pessoal, line_h)
 
         if "telefone" in cfg["pessoais"] and dados_pessoais.get("telefone"):
             px = cfg["pessoais"]["telefone"][0]
@@ -146,19 +169,22 @@ def desenhar_overlay(linhas, dados_pessoais, cfg):
             col_key = cols[j]
             max_w = widths.get(col_key, 80) - 4
             if col_key == "atividades":
-                words = str(text).split()
-                line = ""
-                dy = 0.0
-                for w in words:
-                    test = (line + " " + w).strip()
-                    if c.stringWidth(test, BASE_FONT, fs) <= max_w:
-                        line = test
-                    else:
+                if layout.get("atividades", "wrap") == "shrink":
+                    draw_shrink_to_fit_text(c, text, x_positions[j] + 2, row_y, max_w, BASE_FONT, fs)
+                else:
+                    words = str(text).split()
+                    line = ""
+                    dy = 0.0
+                    for w in words:
+                        test = (line + " " + w).strip()
+                        if c.stringWidth(test, BASE_FONT, fs) <= max_w:
+                            line = test
+                        else:
+                            c.drawString(x_positions[j] + 2, row_y - dy, line)
+                            line = w
+                            dy += line_height
+                    if line:
                         c.drawString(x_positions[j] + 2, row_y - dy, line)
-                        line = w
-                        dy += line_height
-                if line:
-                    c.drawString(x_positions[j] + 2, row_y - dy, line)
             else:
                 c.drawString(x_positions[j] + 2, row_y, str(text))
 
@@ -217,7 +243,11 @@ def admin():
     monitores = [dict(m) for m in monitores_raw]
     
     conn.close()
-    return render_template("admin.html", turmas=turmas, monitores=monitores)
+    
+    cfg = load_config()
+    layout = cfg.get("layout", {"nome": "shrink", "endereco": "shrink", "atividades": "wrap"})
+    
+    return render_template("admin.html", turmas=turmas, monitores=monitores, layout=layout)
 
 @app.route("/admin/turma/save", methods=["POST"])
 @login_required
@@ -262,6 +292,18 @@ def admin_delete_turma(id):
     conn.commit()
     conn.close()
     return redirect(url_for("admin"))
+
+@app.route("/admin/layout/save", methods=["POST"])
+@login_required
+def admin_save_layout():
+    cfg = load_config()
+    if "layout" not in cfg:
+        cfg["layout"] = {}
+    cfg["layout"]["nome"] = request.form.get("nome", "shrink")
+    cfg["layout"]["endereco"] = request.form.get("endereco", "shrink")
+    cfg["layout"]["atividades"] = request.form.get("atividades", "wrap")
+    save_config(cfg)
+    return redirect(url_for("admin") + "#layout")
 
 @app.route("/admin/monitor/save", methods=["POST"])
 @login_required
