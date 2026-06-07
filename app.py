@@ -39,6 +39,12 @@ def init_db():
         horario TEXT,
         FOREIGN KEY(turma_id) REFERENCES turmas(id) ON DELETE CASCADE
     )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS monitores (
+        cpf TEXT PRIMARY KEY,
+        nome TEXT,
+        endereco TEXT,
+        telefone TEXT
+    )''')
     conn.commit()
     conn.close()
 
@@ -63,6 +69,21 @@ def save_config(cfg):
 def top_to_reportlab_y(top_px, page_height):
     return page_height - top_px
 
+def draw_wrapped_text_field(c, text, x, y, max_w, font, fs, line_height):
+    words = str(text).split()
+    line = ""
+    dy = 0.0
+    for w in words:
+        test = (line + " " + w).strip()
+        if c.stringWidth(test, font, fs) <= max_w:
+            line = test
+        else:
+            c.drawString(x, y - dy, line)
+            line = w
+            dy += line_height
+    if line:
+        c.drawString(x, y - dy, line)
+
 def desenhar_overlay(linhas, dados_pessoais, cfg):
     page_w = cfg.get("page_width", A4[0])
     page_h = cfg.get("page_height", A4[1])
@@ -74,10 +95,13 @@ def desenhar_overlay(linhas, dados_pessoais, cfg):
     if "pessoais" in cfg:
         fs_pessoal = cfg["pessoais"].get("font_size", 9)
         c.setFont(BASE_FONT, fs_pessoal)
+        line_h = fs_pessoal * 1.2
+        
         if "nome" in cfg["pessoais"] and dados_pessoais.get("nome"):
             px = cfg["pessoais"]["nome"][0]
             py = top_to_reportlab_y(cfg["pessoais"]["nome"][1], page_h)
-            c.drawString(px, py, str(dados_pessoais["nome"]))
+            max_w = page_w - px - 30 # margem de 30pts da borda direita
+            draw_wrapped_text_field(c, dados_pessoais["nome"], px, py, max_w, BASE_FONT, fs_pessoal, line_h)
         
         if "cpf" in cfg["pessoais"] and dados_pessoais.get("cpf"):
             px = cfg["pessoais"]["cpf"][0]
@@ -87,7 +111,8 @@ def desenhar_overlay(linhas, dados_pessoais, cfg):
         if "endereco" in cfg["pessoais"] and dados_pessoais.get("endereco"):
             px = cfg["pessoais"]["endereco"][0]
             py = top_to_reportlab_y(cfg["pessoais"]["endereco"][1], page_h)
-            c.drawString(px, py, str(dados_pessoais["endereco"]))
+            max_w = page_w - px - 30
+            draw_wrapped_text_field(c, dados_pessoais["endereco"], px, py, max_w, BASE_FONT, fs_pessoal, line_h)
 
         if "telefone" in cfg["pessoais"] and dados_pessoais.get("telefone"):
             px = cfg["pessoais"]["telefone"][0]
@@ -189,8 +214,13 @@ def admin():
             "ano_serie": t['ano_serie'] if 'ano_serie' in t.keys() else "",
             "horarios": [{"dia_semana": h["dia_semana"], "horario": h["horario"]} for h in horarios]
         })
+        
+    c.execute("SELECT * FROM monitores ORDER BY nome ASC")
+    monitores_raw = c.fetchall()
+    monitores = [dict(m) for m in monitores_raw]
+    
     conn.close()
-    return render_template("admin.html", turmas=turmas)
+    return render_template("admin.html", turmas=turmas, monitores=monitores)
 
 @app.route("/admin/turma/save", methods=["POST"])
 @login_required
@@ -236,6 +266,34 @@ def admin_delete_turma(id):
     conn.close()
     return redirect(url_for("admin"))
 
+@app.route("/admin/monitor/save", methods=["POST"])
+@login_required
+def admin_save_monitor():
+    cpf = request.form.get("cpf")
+    nome = request.form.get("nome")
+    endereco = request.form.get("endereco")
+    telefone = request.form.get("telefone")
+
+    if not cpf or not nome:
+        return "Faltando dados", 400
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("INSERT OR REPLACE INTO monitores (cpf, nome, endereco, telefone) VALUES (?, ?, ?, ?)", (cpf, nome, endereco, telefone))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin") + "#monitores")
+
+@app.route("/admin/monitor/delete/<cpf>", methods=["POST"])
+@login_required
+def admin_delete_monitor(cpf):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("DELETE FROM monitores WHERE cpf = ?", (cpf,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin") + "#monitores")
+
 # API para Frontend do Monitor
 @app.route("/api/turmas", methods=["GET"])
 def api_turmas():
@@ -267,6 +325,18 @@ def api_curriculo():
     except Exception:
         return jsonify({})
 
+@app.route("/api/monitor/<cpf>", methods=["GET"])
+def api_monitor(cpf):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT nome, endereco, telefone FROM monitores WHERE cpf = ?", (cpf,))
+    mon = c.fetchone()
+    conn.close()
+    if mon:
+        return jsonify({"encontrado": True, "nome": mon["nome"], "endereco": mon["endereco"], "telefone": mon["telefone"]})
+    return jsonify({"encontrado": False})
+
 # === ROTAS MONITOR (GERADOR) ===
 
 @app.route("/", methods=["GET"])
@@ -285,6 +355,15 @@ def generate():
         "turma_id": request.form.get("turma_id", ""),
         "mes_ano": request.form.get("mes_ano", "")
     }
+
+    # Auto-salvar/atualizar monitor
+    if dados_pessoais["cpf"] and dados_pessoais["nome"]:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("INSERT OR REPLACE INTO monitores (cpf, nome, endereco, telefone) VALUES (?, ?, ?, ?)", 
+                  (dados_pessoais["cpf"], dados_pessoais["nome"], dados_pessoais["endereco"], dados_pessoais["telefone"]))
+        conn.commit()
+        conn.close()
 
     # As atividades chegam via JSON (array de objetos) para flexibilidade
     atividades_json = request.form.get("atividades_data")
