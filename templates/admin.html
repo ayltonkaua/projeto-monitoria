@@ -98,7 +98,7 @@
             <tr class="border-b hover:bg-slate-50">
               <td class="p-3">{{ monitor.cpf }}</td>
               <td class="p-3 font-semibold">{{ monitor.nome }}</td>
-              <td class="p-3 text-sm text-slate-600">{{ monitor.endereco }}</td>
+              <td class="p-3 text-sm text-slate-600 max-w-xs break-words whitespace-normal">{{ monitor.endereco }}</td>
               <td class="p-3">{{ monitor.telefone }}</td>
               <td class="p-3 text-right">
                 <form action="/admin/monitor/delete/{{ monitor.cpf }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir o cadastro deste monitor? O sistema exigirá que ele redigite os dados no próximo mês.');">

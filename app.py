@@ -69,20 +69,17 @@ def save_config(cfg):
 def top_to_reportlab_y(top_px, page_height):
     return page_height - top_px
 
-def draw_wrapped_text_field(c, text, x, y, max_w, font, fs, line_height):
-    words = str(text).split()
-    line = ""
-    dy = 0.0
-    for w in words:
-        test = (line + " " + w).strip()
-        if c.stringWidth(test, font, fs) <= max_w:
-            line = test
-        else:
-            c.drawString(x, y - dy, line)
-            line = w
-            dy += line_height
-    if line:
-        c.drawString(x, y - dy, line)
+def draw_shrink_to_fit_text(c, text, x, y, max_w, font, default_fs):
+    text_str = str(text)
+    fs = default_fs
+    # Encolhe a fonte em passos de 0.5 até caber no limite ou até o mínimo legível (ex: 5pt)
+    while c.stringWidth(text_str, font, fs) > max_w and fs > 5:
+        fs -= 0.5
+    
+    c.setFont(font, fs)
+    c.drawString(x, y, text_str)
+    # Restaura a fonte original para os próximos elementos
+    c.setFont(font, default_fs)
 
 def desenhar_overlay(linhas, dados_pessoais, cfg):
     page_w = cfg.get("page_width", A4[0])
@@ -101,7 +98,7 @@ def desenhar_overlay(linhas, dados_pessoais, cfg):
             px = cfg["pessoais"]["nome"][0]
             py = top_to_reportlab_y(cfg["pessoais"]["nome"][1], page_h)
             max_w = page_w - px - 30 # margem de 30pts da borda direita
-            draw_wrapped_text_field(c, dados_pessoais["nome"], px, py, max_w, BASE_FONT, fs_pessoal, line_h)
+            draw_shrink_to_fit_text(c, dados_pessoais["nome"], px, py, max_w, BASE_FONT, fs_pessoal)
         
         if "cpf" in cfg["pessoais"] and dados_pessoais.get("cpf"):
             px = cfg["pessoais"]["cpf"][0]
@@ -112,7 +109,7 @@ def desenhar_overlay(linhas, dados_pessoais, cfg):
             px = cfg["pessoais"]["endereco"][0]
             py = top_to_reportlab_y(cfg["pessoais"]["endereco"][1], page_h)
             max_w = page_w - px - 30
-            draw_wrapped_text_field(c, dados_pessoais["endereco"], px, py, max_w, BASE_FONT, fs_pessoal, line_h)
+            draw_shrink_to_fit_text(c, dados_pessoais["endereco"], px, py, max_w, BASE_FONT, fs_pessoal)
 
         if "telefone" in cfg["pessoais"] and dados_pessoais.get("telefone"):
             px = cfg["pessoais"]["telefone"][0]
