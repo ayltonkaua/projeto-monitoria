@@ -114,7 +114,11 @@ def desenhar_overlay(linhas, dados_pessoais, cfg):
         if "nome" in cfg["pessoais"] and dados_pessoais.get("nome"):
             px = cfg["pessoais"]["nome"][0]
             py = top_to_reportlab_y(cfg["pessoais"]["nome"][1], page_h)
-            max_w = page_w - px - 30 # margem de 30pts da borda direita
+            if "cpf" in cfg["pessoais"]:
+                max_w = cfg["pessoais"]["cpf"][0] - px - 10
+            else:
+                max_w = page_w - px - 30
+            
             if layout.get("nome", "shrink") == "shrink":
                 draw_shrink_to_fit_text(c, dados_pessoais["nome"], px, py, max_w, BASE_FONT, fs_pessoal)
             else:
@@ -128,7 +132,11 @@ def desenhar_overlay(linhas, dados_pessoais, cfg):
         if "endereco" in cfg["pessoais"] and dados_pessoais.get("endereco"):
             px = cfg["pessoais"]["endereco"][0]
             py = top_to_reportlab_y(cfg["pessoais"]["endereco"][1], page_h)
-            max_w = page_w - px - 30
+            if "telefone" in cfg["pessoais"]:
+                max_w = cfg["pessoais"]["telefone"][0] - px - 10
+            else:
+                max_w = page_w - px - 30
+                
             if layout.get("endereco", "shrink") == "shrink":
                 draw_shrink_to_fit_text(c, dados_pessoais["endereco"], px, py, max_w, BASE_FONT, fs_pessoal)
             else:
