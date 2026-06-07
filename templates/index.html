@@ -481,6 +481,27 @@
       }
     }
 
+    // Auto-preenchimento de Monitor pelo CPF
+    const cpfInput = document.getElementById('cpf');
+    if(cpfInput) {
+        cpfInput.addEventListener('blur', async () => {
+            const val = cpfInput.value.replace(/\D/g, '');
+            if(val.length >= 11) {
+                try {
+                    const r = await fetch("/api/monitor/" + encodeURIComponent(cpfInput.value));
+                    const d = await r.json();
+                    if(d.encontrado) {
+                        document.getElementById('nome').value = d.nome || '';
+                        document.getElementById('endereco').value = d.endereco || '';
+                        document.getElementById('telefone').value = d.telefone || '';
+                        cpfInput.classList.add('border-green-500', 'bg-green-50', 'text-green-800');
+                        setTimeout(() => cpfInput.classList.remove('border-green-500', 'bg-green-50', 'text-green-800'), 1500);
+                    }
+                } catch(e) {}
+            }
+        });
+    }
+
   </script>
 </body>
 </html>

@@ -61,5 +61,105 @@
       "Atividade de gramática: períodos compostos e pontuação",
       "Atividade de revisão para avaliação (leitura + gramática)"
     ]
+  },
+  "1º Ano EM": {
+    "Matemática": [
+      "Atividade de revisão de aritmética e expressões numéricas",
+      "Atividade de propriedades de potências e radiciação",
+      "Atividade de operações com números reais (incluindo irracionais)",
+      "Atividade de resolução de equações do 1º grau e sistemas lineares",
+      "Atividade de funções do 1º grau (interpretação de gráficos e tabelas)",
+      "Atividade de funções afins em contextos do cotidiano (tarifas, salários, consumo)",
+      "Atividade de estudo de variação e taxa de variação em funções lineares",
+      "Atividade de inequações do 1º grau e interpretação em reta numérica",
+      "Atividade de sistemas lineares e problemas de mistura/proporcionalidade",
+      "Atividade de geometria plana: ângulos, paralelismo e polígonos",
+      "Atividade de relações métricas em triângulos (incluindo Pitágoras)",
+      "Atividade de perímetro e área de figuras planas em situações reais",
+      "Atividade de leitura e interpretação de gráficos e tabelas estatísticas",
+      "Atividade de média, mediana e moda em conjuntos de dados do cotidiano"
+    ],
+    "Português": [
+      "Atividade de leitura e interpretação de crônicas contemporâneas",
+      "Atividade de leitura de contos e narrativas longas (romance, novela)",
+      "Atividade de leitura de reportagens e notícias (análise de objetividade e imparcialidade)",
+      "Atividade de leitura de textos de opinião e artigos argumentativos",
+      "Atividade de identificação de tese, argumentos e contra-argumentos em textos opinativos",
+      "Atividade de leitura de textos publicitários (estratégias de persuasão)",
+      "Atividade de produção de texto dissertativo-argumentativo (tema do cotidiano juvenil)",
+      "Atividade de produção de crônica ou relato de experiência pessoal",
+      "Atividade de coesão e coerência textual (conectores, progressão temática)",
+      "Atividade de estudo de variação linguística (regional, social, situacional)",
+      "Atividade de análise de recursos expressivos (figuras de linguagem, ironia)",
+      "Atividade de revisão gramatical em textos dos próprios alunos (reescrita)",
+      "Atividade de leitura e análise de gêneros digitais (posts, comentários, blogs)",
+      "Atividade de discussão e produção de textos sobre temas de cidadania e direitos humanos"
+    ]
+  },
+  "2º Ano EM": {
+    "Matemática": [
+      "Atividade de funções quadráticas: gráficos, raízes e vértice",
+      "Atividade de resolução de equações quadráticas (fórmula de Bhaskara, fatoração, soma e produto)",
+      "Atividade de problemas envolvendo máximos e mínimos com funções quadráticas",
+      "Atividade de estudo comparativo entre funções do 1º e 2º grau",
+      "Atividade de funções exponenciais (crescimento/decrescimento, gráficos)",
+      "Atividade de funções logarítmicas (conceitos básicos e aplicações)",
+      "Atividade de progressões aritméticas (PA) e problemas de sequências lineares",
+      "Atividade de progressões geométricas (PG) e crescimento multiplicativo",
+      "Atividade de geometria analítica: ponto médio, distância entre pontos",
+      "Atividade de equação da reta e interpretação geométrica",
+      "Atividade de trigonometria no triângulo retângulo (seno, cosseno, tangente)",
+      "Atividade de área de figuras planas usando trigonometria",
+      "Atividade de estatística descritiva (tabelas, histogramas, gráficos de barras/linhas)",
+      "Atividade de probabilidade simples em experimentos aleatórios"
+    ],
+    "Português": [
+      "Atividade de leitura de ensaios e textos argumentativos mais complexos",
+      "Atividade de análise de artigos de opinião em jornais e portais de notícias",
+      "Atividade de leitura crítica de reportagens investigativas",
+      "Atividade de estudo de intertextualidade entre textos literários e não literários",
+      "Atividade de leitura e análise de poemas modernos e contemporâneos",
+      "Atividade de leitura de textos dramáticos (roteiros, peças, esquetes)",
+      "Atividade de produção de resenha crítica (livros, filmes, séries)",
+      "Atividade de produção de artigo de opinião sobre temas sociais/políticos",
+      "Atividade de uso de recursos argumentativos (citação, exemplificação, analogia)",
+      "Atividade de análise de discursos midiáticos (fake news, clickbait, manipulação)",
+      "Atividade de uso avançado de pontuação (vírgula, dois-pontos, travessão)",
+      "Atividade de revisão de concordância, regência e uso da crase em textos dos alunos",
+      "Atividade de leitura e produção de gêneros acadêmicos iniciais (relato, resumo, relatório simples)",
+      "Atividade de práticas de letramento digital (postagens, threads, e-mails formais)"
+    ]
+  },
+  "3º Ano EM": {
+    "Matemática": [
+      "Atividade de revisão integrada de funções (1º grau, 2º grau, exponenciais e logarítmicas)",
+      "Atividade de modelagem matemática com funções (crescimento populacional, finanças, física simples)",
+      "Atividade de equações exponenciais e logarítmicas em contextos de juros e decaimento",
+      "Atividade de análise de gráficos de funções compostas e transformações de gráficos",
+      "Atividade de geometria espacial: prismas, cilindros, pirâmides, cones e esferas (área e volume)",
+      "Atividade de problemas de geometria espacial em situações cotidianas (embalagens, reservatórios)",
+      "Atividade de relações trigonométricas no círculo trigonométrico (introdução)",
+      "Atividade de combinações, arranjos e permutações (princípios básicos de análise combinatória)",
+      "Atividade de probabilidade composta (eventos dependentes e independentes)",
+      "Atividade de distribuição de frequências e interpretação de dados reais (pesquisas, gráficos estatísticos)",
+      "Atividade de revisão geral para ENEM/vestibulares (listas integradas)",
+      "Atividade de resolução de problemas integrando diferentes conteúdos (projetos, estudos de caso)"
+    ],
+    "Português": [
+      "Atividade de leitura crítica de textos de opinião em diferentes mídias (jornais, blogs, redes sociais)",
+      "Atividade de leitura e análise de textos filosóficos/sociológicos adaptados (argumentação densa)",
+      "Atividade de leitura de obras literárias integrais ou excertos significativos (romance, conto, poesia)",
+      "Atividade de estudo de escolas literárias e seus contextos históricos",
+      "Atividade de análise comparativa de diferentes gêneros sobre o mesmo tema (reportagem, artigo, charge)",
+      "Atividade de produção de redação dissertativo-argumentativa no modelo ENEM",
+      "Atividade de produção de redação com foco em projeto de intervenção social",
+      "Atividade de reescrita orientada de redações (melhoria de tese, argumentos, coesão e conclusão)",
+      "Atividade de análise linguística em textos reais (norma padrão x usos reais, preconceito linguístico)",
+      "Atividade de uso de citações, dados e vozes de autoridade em textos argumentativos",
+      "Atividade de leitura e produção de gêneros acadêmicos (resumo, resenha, projeto simples)",
+      "Atividade de debate oral e seminário (argumentação oral, defesa de ponto de vista)",
+      "Atividade de análise de discursos públicos (políticos, publicitários, midiáticos)",
+      "Atividade de revisão geral de língua (ortografia, pontuação, concordância, regência) aplicada às produções dos alunos"
+    ]
   }
 }

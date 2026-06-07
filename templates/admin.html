@@ -19,10 +19,19 @@
   </nav>
 
   <main class="max-w-5xl mx-auto p-6 mt-6">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold text-slate-800">Gerenciamento de Turmas</h1>
-      <button onclick="openModal()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 shadow-sm">Nova Turma</button>
+    
+    <!-- TABS -->
+    <div class="flex border-b mb-6">
+      <button onclick="switchTab('turmas')" id="btnTabTurmas" class="px-4 py-2 border-b-2 font-bold text-indigo-600 border-indigo-600">Gestão de Turmas</button>
+      <button onclick="switchTab('monitores')" id="btnTabMonitores" class="px-4 py-2 border-b-2 font-bold text-slate-500 border-transparent hover:text-indigo-600">Monitores Cadastrados</button>
     </div>
+
+    <!-- ABA TURMAS -->
+    <div id="tabTurmas">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-slate-800">Gerenciamento de Turmas</h1>
+        <button onclick="openModal()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 shadow-sm">Nova Turma</button>
+      </div>
 
     <div class="bg-white rounded shadow overflow-hidden">
       <table class="w-full text-left border-collapse">
@@ -65,6 +74,48 @@
         </tbody>
       </table>
     </div>
+    </div> <!-- /tabTurmas -->
+
+    <!-- ABA MONITORES -->
+    <div id="tabMonitores" class="hidden">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-slate-800">Gerenciamento de Monitores</h1>
+      </div>
+
+      <div class="bg-white rounded shadow overflow-hidden">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-100 border-b">
+              <th class="p-3">CPF</th>
+              <th class="p-3">Nome do Monitor</th>
+              <th class="p-3">Endereço</th>
+              <th class="p-3">Telefone</th>
+              <th class="p-3 text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for monitor in monitores %}
+            <tr class="border-b hover:bg-slate-50">
+              <td class="p-3">{{ monitor.cpf }}</td>
+              <td class="p-3 font-semibold">{{ monitor.nome }}</td>
+              <td class="p-3 text-sm text-slate-600">{{ monitor.endereco }}</td>
+              <td class="p-3">{{ monitor.telefone }}</td>
+              <td class="p-3 text-right">
+                <form action="/admin/monitor/delete/{{ monitor.cpf }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja excluir o cadastro deste monitor? O sistema exigirá que ele redigite os dados no próximo mês.');">
+                  <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium">Excluir</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="p-6 text-center text-slate-500">Nenhum monitor cadastrado ainda. O cadastro é automático no primeiro acesso deles.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div> <!-- /tabMonitores -->
+
   </main>
 
   <!-- Modal Nova/Editar Turma -->
@@ -133,6 +184,26 @@
   </div>
 
   <script>
+    function switchTab(tab) {
+      if(tab === 'turmas') {
+        document.getElementById('tabTurmas').classList.remove('hidden');
+        document.getElementById('tabMonitores').classList.add('hidden');
+        document.getElementById('btnTabTurmas').className = "px-4 py-2 border-b-2 font-bold text-indigo-600 border-indigo-600";
+        document.getElementById('btnTabMonitores').className = "px-4 py-2 border-b-2 font-bold text-slate-500 border-transparent hover:text-indigo-600";
+        window.location.hash = 'turmas';
+      } else {
+        document.getElementById('tabTurmas').classList.add('hidden');
+        document.getElementById('tabMonitores').classList.remove('hidden');
+        document.getElementById('btnTabMonitores').className = "px-4 py-2 border-b-2 font-bold text-indigo-600 border-indigo-600";
+        document.getElementById('btnTabTurmas').className = "px-4 py-2 border-b-2 font-bold text-slate-500 border-transparent hover:text-indigo-600";
+        window.location.hash = 'monitores';
+      }
+    }
+    // Ao carregar a pagina, verifica o hash
+    document.addEventListener('DOMContentLoaded', () => {
+      if(window.location.hash === '#monitores') switchTab('monitores');
+    });
+
     function openModal(turma = null) { 
       const modal = document.getElementById('modalTurma');
       const title = document.getElementById('modalTitle');
